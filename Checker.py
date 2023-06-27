@@ -1,4 +1,3 @@
-import ctypes
 import requests
 import json
 import time
@@ -8,17 +7,6 @@ import subprocess
 from colorama import init, Fore, Style
 
 init()  # Initialize colorama
-
-# Function to set the transparency of the terminal background
-def set_terminal_transparency(transparency):
-    try:
-        # Using the Windows API to get the terminal window
-        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-
-        # Setting the transparency using the Windows API
-        ctypes.windll.user32.SetLayeredWindowAttributes(hwnd, 0, int(transparency * 255), 2)
-    except Exception as e:
-        print(f"Error setting transparency: {e}")
 
 def animate_cover():
     sys.stdout.write("""
@@ -47,13 +35,7 @@ def animate_cover():
     sys.stdout.write(" " * 13)
     sys.stdout.write("\r")
     sys.stdout.flush()
-    time.sleep(3)  # 3 seconds pause
-
-# Desired transparency value (between 0 and 1, 0 = fully transparent, 1 = opaque)
-transparency = 0.8
-
-# Set terminal transparency
-set_terminal_transparency(transparency)
+    time.sleep(1.5)  # 1.5 seconds pause
 
 def send_webhook(url, content):
     data = {
@@ -69,7 +51,7 @@ def send_webhook(url, content):
     except requests.exceptions.RequestException as e:
         print(f"Error sending webhook: {e}")
 
-def check_nitro_code(code, webhook_url, valid_file, invalid_file):
+def check_nitro_code(code, webhook_url, valid_file):
     url = f"https://discordapp.com/api/v6/entitlements/gift-codes/{code}?with_application=false&with_subscription_plan=true"
 
     response = requests.get(url)
@@ -78,20 +60,18 @@ def check_nitro_code(code, webhook_url, valid_file, invalid_file):
         result = f"{Fore.GREEN}[VALID]{Style.RESET_ALL} {code}"
         send_webhook(webhook_url, result)
         valid_file.write(f"{code}\n")
+        return True
     else:
         result = f"{Fore.RED}[INVALID]{Style.RESET_ALL} {code}"
-        send_webhook(webhook_url, result)
-        invalid_file.write(f"{code}\n")
         print(result)
+        return False
 
 def check_nitro_codes_from_file(file_path):
     with open(file_path, "r") as file:
         nitro_codes = file.read().splitlines()
 
     num_codes = len(nitro_codes)
-
-    valid_count = 0
-    invalid_count = 0
+    valid_codes = []
 
     webhook_url = input("Enter the Discord webhook URL: ")
 
@@ -107,16 +87,13 @@ def check_nitro_codes_from_file(file_path):
         print("Invalid input. Please enter 'yes' or 'no'.")
         return
 
-    with open("Valid_Codes.txt", "w") as valid_file, \
-            open("Invalid_Codes.txt", "w") as invalid_file:
-
+    with open("Valid_Codes.txt", "w") as valid_file:
         for code in nitro_codes:
-            check_nitro_code(code, webhook_url, valid_file, invalid_file)
+            if check_nitro_code(code, webhook_url, valid_file):
+                valid_codes.append(code)
 
-            if "VALID" in code:
-                valid_count += 1
-            else:
-                invalid_count += 1
+    valid_count = len(valid_codes)
+    invalid_count = num_codes - valid_count
 
     print(f"Valid Codes: {valid_count}")
     print(f"Invalid Codes: {invalid_count}")
