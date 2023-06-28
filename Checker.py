@@ -18,6 +18,8 @@ def animate_cover():
    ╚═╝   ╚══════╝╚═╝     ╚═╝╚═╝     ╚═╝        ╚═╝
     """)
     sys.stdout.write("\n")
+    sys.stdout.write("NitroChecker")
+    sys.stdout.write("\n")
     sys.stdout.write("Loading")
     start_time = time.time()
     stop_time = start_time + random.uniform(5, 10)
